@@ -81,103 +81,43 @@ public class MyStringBuilderImpl implements MyStringBuilder {
     public MyStringBuilderImpl delete(String s) {
         char[] value = s.toCharArray();
         int deleteChars = 0;
-        int count = 0;
+        int countEqualsChars = 0;
         int countIn = numberOfOccurrences(s);
         char[] res = new char[charArray.length - s.length() * countIn];
 
         for(int i = 0; i < charArray.length; i++) {
-            for(int j = 0; j < value.length; j++) {
-                if(charArray[i + j] == value[j]) {
-                    count++;
-                }
-                else {
-                    count = 0;
-                    break;
-                }
-            }
+            countEqualsChars = countChars(s, i, charArray);
 
-//            if(count == value.length) {
-//                if(i == 0) {
-//                    res[i] = charArray[i + value.length];
-//                }
-//                if(i != 0) {
-//                    if(i + value.length - 1 < charArray.length) {
-//                        break;
-//                    }
-//
-//                    if(i + value.length - 1 >= charArray.length) {
-//                        res[i- value.length] = charArray[i + value.length];
-//                    }
-//                }
-//            }
-//            else {
-//                if(i == 0) {
-//                    res[i] = charArray[i];
-//                }
-//                if(i != 0) {
-//                    res[i - count] = charArray[i];
-//                }
-//            }
-
-            if(count == value.length && i == 0) {
+            if(countEqualsChars == value.length && i == 0) {
                 res[i] = charArray[i + value.length];
                 i+=value.length;
-                deleteChars = count;
+                deleteChars = countEqualsChars;
             }
 
-            else if(count == value.length && i + value.length + 1< charArray.length && i != 0) {
-                res[i] = charArray[i + value.length];
+            else if(countEqualsChars == value.length && i + value.length + 1< charArray.length && i != 0) {
+                res[i - deleteChars] = charArray[i + value.length];
                 i+=value.length;
-                deleteChars = count;
+                deleteChars += countEqualsChars;
             }
 
-            else if(count == value.length && i + value.length + 1== charArray.length && i != 0) {
-                res[i] = charArray[i + value.length];
+            else if(countEqualsChars == value.length && i + value.length + 1 == charArray.length && i != 0) {
+                res[i - deleteChars] = charArray[i + value.length];
                 break;
             }
 
-            else if(count == value.length && i != 0 && i+ value.length == charArray.length) {
-//                res[i- value.length] = charArray[i + value.length];
+            else if(countEqualsChars == value.length && i != 0 && i+ value.length == charArray.length) {
                 break;
             }
 
-            else if(count != value.length && i == 0) {
+            else if(countEqualsChars != value.length && i == 0) {
                 res[i] = charArray[i];
             }
 
-              else if(count != value.length && i != 0) {
+              else if(countEqualsChars != value.length && i != 0) {
                 res[i - deleteChars] = charArray[i];
             }
 
         }
-
-
-
-
-//        char[] res = new char[this.charArray.length - s.length()];
-//
-//
-//        for(int i = 0; i < charArray.length; i++) {
-//            for(int j = 0; j < value.length; j++) {
-//                if(charArray[i + j] == value[j]) {
-//                    count++;
-//                }
-//                else {
-//                    count = 0;
-//                    break;
-//                }
-//            }
-//            if(count == value.length) {
-//                if(i + value.length < charArray.length) {
-//                    res[i] = this.charArray[i + value.length];
-//                }
-//                else
-//                    charArray = res;
-//            }
-//            else if(i < res.length) {
-//                res[i] = charArray[i];
-//            }
-//        }
 
         this.charArray = res;
         this.length = this.charArray.length;
@@ -233,20 +173,27 @@ public class MyStringBuilderImpl implements MyStringBuilder {
         int countIn = 0;
         char[] value = s.toCharArray();
         for(int i = 0; i < charArray.length; i++) {
-            for(int j = 0; j < value.length; j++) {
-                if(charArray[i + j] == value[j]) {
-                    count++;
-                }
-                else {
-                    count = 0;
-                    break;
-                }
-            }
+            count = countChars(s, i, charArray);
             if(count == value.length) {
                 countIn++;
             }
         }
         return countIn;
+    }
+
+    public int countChars(String s, int i, char[] chars) {
+        char[] value = s.toCharArray();
+        int count = 0;
+        for(int j = 0; j < value.length; j++) {
+            if(chars[i + j] == value[j]) {
+                count++;
+            }
+            else {
+                count = 0;
+                return count;
+            }
+        }
+        return count;
     }
 
 }

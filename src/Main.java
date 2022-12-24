@@ -8,7 +8,7 @@ public class Main {
         String str = "year";
 
         MyStringBuilderImpl myStringBuilder = new MyStringBuilderImpl("Hello");
-        myStringBuilder.delete("llo");
+        myStringBuilder.delete("He");
         System.out.println("My string builder = " + myStringBuilder);
         System.out.println("My string builder = " + myStringBuilder.getLength());
 

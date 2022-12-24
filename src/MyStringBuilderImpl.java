@@ -1,6 +1,3 @@
-import java.lang.reflect.Array;
-
-import static java.lang.System.arraycopy;
 
 public class MyStringBuilderImpl implements MyStringBuilder {
     char[] charArray;
@@ -83,6 +80,7 @@ public class MyStringBuilderImpl implements MyStringBuilder {
     @Override
     public MyStringBuilderImpl delete(String s) {
         char[] value = s.toCharArray();
+        int deleteChars = 0;
         int count = 0;
         int countIn = numberOfOccurrences(s);
         char[] res = new char[charArray.length - s.length() * countIn];
@@ -98,25 +96,57 @@ public class MyStringBuilderImpl implements MyStringBuilder {
                 }
             }
 
+//            if(count == value.length) {
+//                if(i == 0) {
+//                    res[i] = charArray[i + value.length];
+//                }
+//                if(i != 0) {
+//                    if(i + value.length - 1 < charArray.length) {
+//                        break;
+//                    }
+//
+//                    if(i + value.length - 1 >= charArray.length) {
+//                        res[i- value.length] = charArray[i + value.length];
+//                    }
+//                }
+//            }
+//            else {
+//                if(i == 0) {
+//                    res[i] = charArray[i];
+//                }
+//                if(i != 0) {
+//                    res[i - count] = charArray[i];
+//                }
+//            }
+
             if(count == value.length && i == 0) {
                 res[i] = charArray[i + value.length];
                 i+=value.length;
+                deleteChars = count;
             }
 
-            else if(count == value.length && i + value.length - 1 < charArray.length && i != 0) {
+            else if(count == value.length && i + value.length + 1< charArray.length && i != 0) {
+                res[i] = charArray[i + value.length];
+                i+=value.length;
+                deleteChars = count;
+            }
+
+            else if(count == value.length && i + value.length + 1== charArray.length && i != 0) {
+                res[i] = charArray[i + value.length];
                 break;
             }
 
-            else if(count == value.length && i != 0 && i+ value.length >= charArray.length) {
-                res[i- value.length] = charArray[i + value.length];
+            else if(count == value.length && i != 0 && i+ value.length == charArray.length) {
+//                res[i- value.length] = charArray[i + value.length];
+                break;
             }
 
             else if(count != value.length && i == 0) {
                 res[i] = charArray[i];
             }
 
-            else if(count != value.length && i != 0) {
-                res[i] = charArray[i];
+              else if(count != value.length && i != 0) {
+                res[i - deleteChars] = charArray[i];
             }
 
         }

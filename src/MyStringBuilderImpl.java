@@ -4,7 +4,10 @@ public class MyStringBuilderImpl implements MyStringBuilder {
 
     int length;
 
-    public MyStringBuilderImpl (){}
+    public MyStringBuilderImpl (){
+        this.charArray = new char[0];
+        this.length = charArray.length;
+    }
 
     public MyStringBuilderImpl(String s) {
         this.charArray  = s.toCharArray();
@@ -13,11 +16,6 @@ public class MyStringBuilderImpl implements MyStringBuilder {
 
     @Override
     public MyStringBuilderImpl append(char c) {
-//        char[] el = new char[]{c};
-//        char[] combined = new char[charArray.length + el.length];
-//        arraycopy(charArray, 0, combined, 0, charArray.length);
-//        arraycopy(el, 0, combined, charArray.length, el.length);
-//        this.charArray = combined;
         char[] res = new char[++length];
         enumElements(this.charArray, res, 0, this.charArray.length);
         res[--length] = c;
@@ -85,38 +83,43 @@ public class MyStringBuilderImpl implements MyStringBuilder {
         int countIn = numberOfOccurrences(s);
         char[] res = new char[charArray.length - s.length() * countIn];
 
-        for(int i = 0; i < charArray.length; i++) {
-            countEqualsChars = countChars(s, i, charArray);
+        if(s.length() == 1) {
+            res = deleteChar(value[0], charArray, res);
+        }
+        else {
+            for(int i = 0; i < charArray.length; i++) {
+                countEqualsChars = countChars(s, i, charArray);
 
-            if(countEqualsChars == value.length && i == 0) {
-                res[i] = charArray[i + value.length];
-                i+=value.length;
-                deleteChars = countEqualsChars;
+                if(countEqualsChars == value.length && i == 0) {
+                    res[i] = charArray[i + value.length];
+                    i+=value.length;
+                    deleteChars = countEqualsChars;
+                }
+
+                else if(countEqualsChars == value.length && i + value.length + 1 < charArray.length && i != 0) {
+                    res[i - deleteChars] = charArray[i + value.length];
+                    i+=value.length;
+                    deleteChars += countEqualsChars;
+                }
+
+                else if(countEqualsChars == value.length && i + value.length + 1 == charArray.length && i != 0) {
+                    res[i - deleteChars] = charArray[i + value.length];
+                    break;
+                }
+
+                else if(countEqualsChars == value.length && i != 0 && i+ value.length == charArray.length) {
+                    break;
+                }
+
+                else if(countEqualsChars != value.length && i == 0) {
+                    res[i] = charArray[i];
+                }
+
+                else if(countEqualsChars != value.length && i != 0) {
+                    res[i - deleteChars] = charArray[i];
+                }
+
             }
-
-            else if(countEqualsChars == value.length && i + value.length + 1< charArray.length && i != 0) {
-                res[i - deleteChars] = charArray[i + value.length];
-                i+=value.length;
-                deleteChars += countEqualsChars;
-            }
-
-            else if(countEqualsChars == value.length && i + value.length + 1 == charArray.length && i != 0) {
-                res[i - deleteChars] = charArray[i + value.length];
-                break;
-            }
-
-            else if(countEqualsChars == value.length && i != 0 && i+ value.length == charArray.length) {
-                break;
-            }
-
-            else if(countEqualsChars != value.length && i == 0) {
-                res[i] = charArray[i];
-            }
-
-              else if(countEqualsChars != value.length && i != 0) {
-                res[i - deleteChars] = charArray[i];
-            }
-
         }
 
         this.charArray = res;
@@ -189,11 +192,31 @@ public class MyStringBuilderImpl implements MyStringBuilder {
                 count++;
             }
             else {
-                count = 0;
                 return count;
             }
         }
         return count;
     }
+
+    public char[] deleteChar(char c, char[] chars, char[] res) {
+        int count = 0;
+        for(int i = 0; i < chars.length; i++) {
+            if(chars[i] == c && i == chars.length -1) {
+                break;
+            }
+            else if(chars[i] == c && chars[i + 1] != c) {
+                res[i - count] = chars[i + 1];
+                i++;
+                count++;
+            }
+            else if(chars[i] == c && chars[i + 1] == c) {
+                count++;
+            }
+            else
+                res[i - count] = chars[i];
+        }
+        return res;
+    }
+
 
 }

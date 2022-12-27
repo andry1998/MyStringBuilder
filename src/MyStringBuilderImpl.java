@@ -125,7 +125,29 @@ public class MyStringBuilderImpl implements MyStringBuilder {
         this.charArray = res;
         this.length = this.charArray.length;
         return this;
+    }
 
+    @Override
+    public MyStringBuilderImpl remove() {
+        char[] res = new char[--length];
+        enumElements(charArray, res, 0, res.length);
+        charArray = res;
+        length = charArray.length;
+        return this;
+    }
+
+    @Override
+    public MyStringBuilderImpl remove(char[] c) {
+        charArray = removeArrayChars(c);
+        length = charArray.length;
+        return this;
+    }
+
+    @Override
+    public MyStringBuilderImpl remove(String str) {
+        charArray = removeArrayChars(str.toCharArray());
+        length = charArray.length;
+        return this;
     }
 
     @Override
@@ -215,6 +237,12 @@ public class MyStringBuilderImpl implements MyStringBuilder {
             else
                 res[i - count] = chars[i];
         }
+        return res;
+    }
+
+    public char[] removeArrayChars(char[] c) {
+        char[] res = new char[length - c.length];
+        enumElements(charArray, res, 0, res.length);
         return res;
     }
 

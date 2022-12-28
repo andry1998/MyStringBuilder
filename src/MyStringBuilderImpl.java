@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Stack;
 
 public class MyStringBuilderImpl implements MyStringBuilder, Command {
@@ -12,12 +14,15 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
 
     char[] deletedString;
 
+    List<Integer> indexDeleted;
+
     public MyStringBuilderImpl (){
         this.charArray = new char[0];
         this.length = charArray.length;
         undoStack = new Stack<>();
         redoStack = new Stack<>();
         deletedString = new char[0];
+        indexDeleted = new ArrayList<>();
     }
 
     public MyStringBuilderImpl(String s) {
@@ -26,6 +31,7 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
         undoStack = new Stack<>();
         redoStack = new Stack<>();
         deletedString = new char[0];
+        indexDeleted = new ArrayList<>();
     }
 
     @Override
@@ -96,6 +102,8 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
         char[] value = s.toCharArray();
         int deleteChars = 0;
         int countEqualsChars = 0;
+        this.deletedString = new char[s.length()];
+        deletedString = enumElements(s.toCharArray(), deletedString, 0, s.length());
         int countIn = numberOfOccurrences(s);
         char[] res = new char[charArray.length - s.length() * countIn];
 
@@ -214,6 +222,7 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
     }
 
     public int countChars(String s, int i, char[] chars) {
+        //this.deletedString = new char[s.length()];
         char[] value = s.toCharArray();
         int count = 0;
         for(int j = 0; j < value.length; j++) {
@@ -228,18 +237,24 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
     }
 
     public char[] deleteChar(char c, char[] chars, char[] res) {
+        deletedString = new char[1];
+        deletedString[0] = c;
         int count = 0;
         for(int i = 0; i < chars.length; i++) {
             if(chars[i] == c && i == chars.length -1) {
+                indexDeleted.add(i);
                 break;
             }
             else if(chars[i] == c && chars[i + 1] != c) {
                 res[i - count] = chars[i + 1];
+                indexDeleted.add(i);
                 i++;
                 count++;
+
             }
             else if(chars[i] == c && chars[i + 1] == c) {
                 count++;
+                indexDeleted.add(i);
             }
             else
                 res[i - count] = chars[i];

@@ -6,11 +6,7 @@ public interface MyStringBuilder {
 
     MyStringBuilderImpl append(String s);
 
-    MyStringBuilderImpl remove();
-
-    MyStringBuilderImpl remove(char[] c);
-
-    MyStringBuilderImpl remove(String s);
+    MyStringBuilderImpl remove(int startIndex, int length);
 
     MyStringBuilderImpl insert(char c, int index);
 

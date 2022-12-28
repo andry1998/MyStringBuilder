@@ -1,56 +1,41 @@
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Stack;
 
-public class MyStringBuilderImpl implements MyStringBuilder {
+public class MyStringBuilderImpl implements MyStringBuilder, Command {
     char[] charArray;
 
     int length;
 
-    Stack<HistoryOperation> redoHistory;
+    Stack<HistoryOperation> undoStack;
 
-    Stack<HistoryOperation> undoHistory;
+    Stack<HistoryOperation> redoStack;
+
+    char[] deletedString;
 
     public MyStringBuilderImpl (){
         this.charArray = new char[0];
         this.length = charArray.length;
-        redoHistory = new Stack<>();
-        undoHistory = new Stack<>();
+        undoStack = new Stack<>();
+        redoStack = new Stack<>();
+        deletedString = new char[0];
     }
 
     public MyStringBuilderImpl(String s) {
         this.charArray  = s.toCharArray();
         this.length = s.length();
-        redoHistory = new Stack<>();
-        undoHistory = new Stack<>();
+        undoStack = new Stack<>();
+        redoStack = new Stack<>();
+        deletedString = new char[0];
     }
 
     @Override
     public MyStringBuilderImpl append(char c) {
-        var curStr = this.charArray;
-        char[] res = new char[++length];
-        enumElements(this.charArray, res, 0, this.charArray.length);
-        res[--length] = c;
-        this.charArray = res;
-        this.length = this.charArray.length;
-        redoHistory.push(
-                new HistoryOperation(
-                        OperationType.APPEND,
-                        Arrays.asList(String.valueOf(c)), Arrays.asList(curStr.length))
-        );
-        return this;
+        return append(String.valueOf(c));
     }
 
     @Override
     public MyStringBuilderImpl append(char[] c) {
-        var curStr = this.charArray;
-        this.charArray = appendArrayChars(c);
-        this.length = this.charArray.length;
-        redoHistory.push(
-                new HistoryOperation(OperationType.APPEND, Arrays.asList(String.valueOf(c)), Arrays.asList(curStr.length))
-        );
-        return this;
+        return append(String.valueOf(c));
     }
 
     @Override
@@ -58,47 +43,52 @@ public class MyStringBuilderImpl implements MyStringBuilder {
         var curStr = this.charArray;
         this.charArray = appendArrayChars(s.toCharArray());
         this.length = this.charArray.length;
-        redoHistory.push(
-                new HistoryOperation(OperationType.APPEND, Arrays.asList(s), Arrays.asList(curStr.length))
+        undoStack.push(
+                new HistoryOperation(
+                        OperationType.APPEND,
+                        Arrays.asList(s),
+                        Arrays.asList(curStr.length)
+                )
         );
         return this;
     }
 
     @Override
     public MyStringBuilderImpl insert(char c, int index) {
-        char[] res = new char[++length];
-        enumElements(this.charArray, res, 0, index);
-        res[index] = c;
-        for(int i = index + 1; i < res.length; i++) {
-            res[i] = this.charArray[i-1];
-        }
-        this.charArray = res;
-        this.length = this.charArray.length;
-        return this;
+        return insert(String.valueOf(c), index);
     }
 
     @Override
     public MyStringBuilderImpl insert(char[] c, int index) {
-        this.charArray = insertArrayChars(c, index);
-        this.length = this.charArray.length;
-        return this;
+        return insert(String.valueOf(c), index);
     }
 
     @Override
     public MyStringBuilderImpl insert(String s, int index) {
+        var curl = this.charArray;
         this.charArray = insertArrayChars(s.toCharArray(), index);
         this.length = this.charArray.length;
+        undoStack.push(
+                new HistoryOperation(
+                        OperationType.INSERT,
+                        Arrays.asList(s),
+                        Arrays.asList(index, s.length())
+                )
+        );
         return this;
     }
 
     @Override
     public MyStringBuilderImpl delete(int from, int to) {
-        char[] res = new char[this.charArray.length - (to - from)];
-        enumElements(this.charArray, res, 0, from);
-        enumElements(this.charArray, res, from, to, this.charArray.length);
-        this.charArray = res;
-        this.length = this.charArray.length;
-        return this;
+        var res = remove(from, to - from);
+        undoStack.push(
+                new HistoryOperation(
+                        OperationType.DELETE,
+                        Arrays.asList(String.valueOf(deletedString)),
+                        Arrays.asList(from, to - from)
+                )
+        );
+        return res;
     }
 
     @Override
@@ -155,8 +145,11 @@ public class MyStringBuilderImpl implements MyStringBuilder {
 
     @Override
     public MyStringBuilderImpl remove(int startIndex, int length) {
+        deletedString = new char[length];
         char[] res = new char[this.length - length];
+        int n = 0;
         int count = startIndex;
+        deletedString = enumElements(charArray, deletedString, n,  startIndex, startIndex + length);
         res = enumElements(charArray, res, 0, startIndex);
         res = enumElements(charArray, res, count, startIndex + length, charArray.length);
         charArray = res;
@@ -254,26 +247,42 @@ public class MyStringBuilderImpl implements MyStringBuilder {
         return res;
     }
 
-    public char[] removeArrayChars(char[] c) {
-        char[] res = new char[length - c.length];
-        enumElements(charArray, res, 0, res.length);
-        return res;
-    }
-
-    public void undo() throws Exception {
-        if(redoHistory.isEmpty())
+    @Override
+    public void undo() {
+        if(undoStack.isEmpty())
             return;
-        var operation = redoHistory.pop();
-        undoHistory.push(operation);
+        var operation = undoStack.pop();
+        redoStack.push(operation);
         switch (operation.operationType) {
             case APPEND:
                 remove(operation.getIntOperands().get(0), operation.getStringOperands().get(0).length());
                 break;
             case INSERT:
-                throw new Error("Insert");
+                remove(operation.getIntOperands().get(0), operation.getIntOperands().get(1));
+                break;
             case DELETE:
-                throw new Error("Delete");
-            default: throw new Exception("Undefined type");
+                insert(operation.getStringOperands().get(0), operation.getIntOperands().get(0));
+        }
+    }
+
+    @Override
+    public void redo() {
+        if(redoStack.isEmpty())
+            return;
+        var operation = redoStack.pop();
+        switch (operation.operationType) {
+            case APPEND:
+                append(operation.getStringOperands().get(0));
+                undoStack.clear();
+                break;
+            case INSERT:
+                insert(operation.getStringOperands().get(0), operation.getIntOperands().get(0));
+                undoStack.clear();
+                break;
+            case DELETE:
+                remove(operation.getIntOperands().get(0), operation.getStringOperands().get(0).length());
+                undoStack.clear();
+                break;
         }
     }
 }

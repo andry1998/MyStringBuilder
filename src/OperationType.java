@@ -1,5 +1,6 @@
 public enum OperationType {
     APPEND,
     INSERT,
-    DELETE
+    DELETE,
+    DELETE_STRING
 }

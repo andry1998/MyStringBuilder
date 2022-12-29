@@ -21,4 +21,8 @@ public interface MyStringBuilder {
     String toString();
 
     int getLength();
+
+    void undo();
+
+    void redo();
 }

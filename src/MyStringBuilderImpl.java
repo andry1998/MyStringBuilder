@@ -3,7 +3,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
-public class MyStringBuilderImpl implements MyStringBuilder, Command {
+public class MyStringBuilderImpl implements MyStringBuilder {
     char[] charArray;
 
     int length;
@@ -84,6 +84,16 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
         return this;
     }
 
+    public MyStringBuilderImpl insertDeleted(String s) {
+        char[] res = new char[this.length - s.length() * this.indexDeleted.size()];
+        for(Integer i : this.indexDeleted) {
+            res = insert(s, i).charArray;
+        }
+        this.charArray = res;
+        this.length = charArray.length;
+        return this;
+    }
+
     @Override
     public MyStringBuilderImpl delete(int from, int to) {
         var res = remove(from, to - from);
@@ -116,22 +126,26 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
 
                 if(countEqualsChars == value.length && i == 0) {
                     res[i] = charArray[i + value.length];
+                    this.indexDeleted.add(i);
                     i+=value.length;
                     deleteChars = countEqualsChars;
                 }
 
                 else if(countEqualsChars == value.length && i + value.length + 1 < charArray.length && i != 0) {
                     res[i - deleteChars] = charArray[i + value.length];
+                    this.indexDeleted.add(i);
                     i+=value.length;
                     deleteChars += countEqualsChars;
                 }
 
                 else if(countEqualsChars == value.length && i + value.length + 1 == charArray.length && i != 0) {
                     res[i - deleteChars] = charArray[i + value.length];
+                    this.indexDeleted.add(i);
                     break;
                 }
 
                 else if(countEqualsChars == value.length && i != 0 && i+ value.length == charArray.length) {
+                    this.indexDeleted.add(i);
                     break;
                 }
 
@@ -146,6 +160,13 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
             }
         }
 
+        undoStack.push(
+                new HistoryOperation(
+                        OperationType.DELETE_STRING,
+                        Arrays.asList(s),
+                        Arrays.asList(s.length())
+                )
+        );
         this.charArray = res;
         this.length = this.charArray.length;
         return this;
@@ -222,7 +243,6 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
     }
 
     public int countChars(String s, int i, char[] chars) {
-        //this.deletedString = new char[s.length()];
         char[] value = s.toCharArray();
         int count = 0;
         for(int j = 0; j < value.length; j++) {
@@ -269,14 +289,10 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
         var operation = undoStack.pop();
         redoStack.push(operation);
         switch (operation.operationType) {
-            case APPEND:
-                remove(operation.getIntOperands().get(0), operation.getStringOperands().get(0).length());
-                break;
-            case INSERT:
-                remove(operation.getIntOperands().get(0), operation.getIntOperands().get(1));
-                break;
-            case DELETE:
-                insert(operation.getStringOperands().get(0), operation.getIntOperands().get(0));
+            case APPEND -> remove(operation.getIntOperands().get(0), operation.getStringOperands().get(0).length());
+            case INSERT -> remove(operation.getIntOperands().get(0), operation.getIntOperands().get(1));
+            case DELETE -> insert(operation.getStringOperands().get(0), operation.getIntOperands().get(0));
+            case DELETE_STRING -> insertDeleted(operation.getStringOperands().get(0));
         }
     }
 
@@ -286,18 +302,22 @@ public class MyStringBuilderImpl implements MyStringBuilder, Command {
             return;
         var operation = redoStack.pop();
         switch (operation.operationType) {
-            case APPEND:
+            case APPEND -> {
                 append(operation.getStringOperands().get(0));
                 undoStack.clear();
-                break;
-            case INSERT:
+            }
+            case INSERT -> {
                 insert(operation.getStringOperands().get(0), operation.getIntOperands().get(0));
                 undoStack.clear();
-                break;
-            case DELETE:
+            }
+            case DELETE -> {
                 remove(operation.getIntOperands().get(0), operation.getStringOperands().get(0).length());
                 undoStack.clear();
-                break;
+            }
+            case DELETE_STRING -> {
+                delete(operation.getStringOperands().get(0));
+                undoStack.clear();
+            }
         }
     }
 }
